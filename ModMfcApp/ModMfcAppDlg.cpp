@@ -173,21 +173,21 @@ void CModMfcAppDlg::OnBnClickedTcpBtn()
 
 HBRUSH CModMfcAppDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+    HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	// "Modbus Test"의 ID를 IDC_STATIC_TITLE로 가정
-	if (pWnd->GetDlgCtrlID() == IDC_STATIC_TITLE && nCtlColor == CTLCOLOR_STATIC)
-	{
-		// 텍스트 색상 설정 (예: 파란색)
-		pDC->SetTextColor(RGB(0, 0, 255));
+    // "Modbus Test"의 ID를 IDC_STATIC_TITLE로 가정
+    if (pWnd->GetDlgCtrlID() == IDC_STATIC_TITLE && nCtlColor == CTLCOLOR_STATIC)
+    {
+        // 텍스트 색상 설정 (예: 파란색)
+        pDC->SetTextColor(RGB(0, 0, 255));
 
-		// 배경 투명
-		pDC->SetBkMode(TRANSPARENT);
+        // 배경 투명
+        pDC->SetBkMode(TRANSPARENT);
 
-		// 배경을 투명하게 하려면 NULL_BRUSH 반환
-		return (HBRUSH)GetStockObject(NULL_BRUSH);
-	}
+        // 배경을 투명하게 하려면 NULL_BRUSH 반환
+        return (HBRUSH)GetStockObject(NULL_BRUSH);
+    }
 
-	return hbr;
+    return hbr;
 }
 

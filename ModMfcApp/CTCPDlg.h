@@ -50,6 +50,8 @@ private:
 
 	void UpdateTxInfo();
 
+	int m_nDisplayMode;
+
 public:
 	
 	afx_msg void OnBnClickedButtonStart();

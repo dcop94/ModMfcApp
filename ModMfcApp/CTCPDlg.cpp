@@ -35,6 +35,8 @@ void CTCPDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_QUANTITY, m_strQuantity);
 	
 	DDX_Control(pDX, IDC_LIST_RESULT, m_listResult);
+
+	DDX_Radio(pDX, IDC_RADIO_HEX, m_nDisplayMode);
 }
 
 BEGIN_MESSAGE_MAP(CTCPDlg, CDialogEx)
@@ -122,6 +124,8 @@ void CTCPDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CTCPDlg::DoModbusRead()
 {
+	UpdateData(TRUE);
+
 	int port = _ttoi(m_strPort);
 	int unitId = _ttoi(m_strUnitId);
 	int funcCode = _ttoi(m_strFuncCode);
@@ -205,13 +209,14 @@ void CTCPDlg::DoModbusRead()
 	// 기존 열 삭제
 	int colCount = m_listResult.GetHeaderCtrl()->GetItemCount();
 
-	for (int i = colCount - 1; i >= 0; i--)
+	for (int c = colCount - 1; c >= 0; c--)
 	{
-		m_listResult.DeleteColumn(i);
+		m_listResult.DeleteColumn(c);
 	}
 
 	int sets = (quantity + 9) / 10;
 
+	// 열생성
 	for (int s = 0; s < sets; s++)
 	{
 		CString colAlias;
@@ -229,6 +234,7 @@ void CTCPDlg::DoModbusRead()
 		m_listResult.InsertColumn(baseCol+2, colVal, LVCFMT_LEFT, 80);
 	}
 
+	// 행 최대 10개
 	int rows = (quantity < 10) ? quantity : 10;
 
 	for (int i = 0; i < rows; i++)
@@ -257,7 +263,37 @@ void CTCPDlg::DoModbusRead()
 
 			// Value
 			CString strVal;
-			strVal.Format(_T("0x%04X"), response[regIndex]);
+			switch (m_nDisplayMode)
+			{
+			case 0:
+				strVal.Format(_T("0x%04X"), response[regIndex]);
+				break;
+
+			case 1:
+				{
+					int16_t val16 = static_cast<int16_t>(response[regIndex]);
+					strVal.Format(_T("%d"), val16);
+				}
+				break;
+
+			case 2:
+				{
+					if (regIndex + 1 < quantity)
+					{
+						uint32_t high = response[regIndex];
+						uint32_t low = response[regIndex + 1];
+						int32_t val32 = static_cast<int32_t>((high << 16) | (low & 0xFFFF));
+						strVal.Format(_T("%d"), val32);
+					}
+					else
+					{
+						strVal = _T("-");
+					}
+				}
+				
+				break;
+			}
+			
 			int colVal = s * 3 + 2;
 			m_listResult.SetItemText(nItem, colVal, strVal);
 		}
@@ -273,6 +309,8 @@ void CTCPDlg::UpdateTxInfo()
 	strInfo.Format(_T("TX = %d / ID = %d / FC = %d"), m_nTxCount, unitId, funcCode);
 	SetDlgItemText(IDC_STATIC_TXINFO, strInfo);
 }
+
+
 
 
 
