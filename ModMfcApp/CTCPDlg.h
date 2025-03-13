@@ -52,6 +52,7 @@ private:
 
 public:
 	
-	afx_msg void OnBnClickedButtonOk();
+	afx_msg void OnBnClickedButtonStart();
+	afx_msg void OnBnClickedButtonStop();
 };
 

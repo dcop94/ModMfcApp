@@ -38,7 +38,8 @@ void CTCPDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CTCPDlg, CDialogEx)
-	ON_BN_CLICKED(IDC_BUTTON_OK, &CTCPDlg::OnBnClickedButtonOk)
+	ON_BN_CLICKED(IDC_BUTTON_START, &CTCPDlg::OnBnClickedButtonStart)
+	ON_BN_CLICKED(IDC_BUTTON_STOP, &CTCPDlg::OnBnClickedButtonStop)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -49,18 +50,18 @@ BOOL CTCPDlg::OnInitDialog()
 	// 리스트 컨트롤 초기화 설정 (레포트 모드, 컬럼 추가 등)
 	m_listResult.ModifyStyle(0, LVS_REPORT);
 	m_listResult.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-	m_listResult.DeleteAllItems();
+	//m_listResult.DeleteAllItems();
 
-	// 컬럼추가
-	m_listResult.InsertColumn(0, _T("Alias"), LVCFMT_LEFT, 60);
-	m_listResult.InsertColumn(1, _T("Address"), LVCFMT_LEFT, 80);
-	m_listResult.InsertColumn(2, _T("Value"), LVCFMT_LEFT, 80);
+	//// 컬럼추가
+	//m_listResult.InsertColumn(0, _T("Alias"), LVCFMT_LEFT, 60);
+	//m_listResult.InsertColumn(1, _T("Address"), LVCFMT_LEFT, 80);
+	//m_listResult.InsertColumn(2, _T("Value"), LVCFMT_LEFT, 80);
 
 
 	return TRUE;
 }
 
-void CTCPDlg::OnBnClickedButtonOk()
+void CTCPDlg::OnBnClickedButtonStart()
 {
 	// 한번만 수동으로 읽기
 	UpdateData(TRUE);
@@ -81,8 +82,31 @@ void CTCPDlg::OnBnClickedButtonOk()
 		SetTimer(1, 1000, NULL);
 		m_bTimerStarted = TRUE;
 	}
-
 }
+
+
+void CTCPDlg::OnBnClickedButtonStop()
+{
+	// 정지
+	if (m_bTimerStarted)
+	{
+		KillTimer(1);
+		m_bTimerStarted = FALSE;
+	}
+
+	// TX 카운트 및 표시값 초기화
+	m_nTxCount = 0;
+	UpdateTxInfo();
+
+	// 리스트초기화
+	m_listResult.DeleteAllItems();
+	int colCount = m_listResult.GetHeaderCtrl()->GetItemCount();
+	for (int i = colCount - 1; i >= 0; i--)
+	{
+		m_listResult.DeleteColumn(i);
+	}
+}
+
 
 void CTCPDlg::OnTimer(UINT_PTR nIDEvent)
 {
@@ -145,33 +169,99 @@ void CTCPDlg::DoModbusRead()
 		modbus_free(ctx);
 		return;
 	}
-	
-	if (rc > 0)
-	{
-		// 기존 리스트 내용 지우기
-		m_listResult.DeleteAllItems();
-
-		// rc 값 만큼 응답 데이터를 리스트에 추가 (2바이트 단위)
-		for (int i = 0; i < rc; i++)
-		{
-			CString strAlias;
-			strAlias.Format(_T("%d"), i);
-			int nItem = m_listResult.InsertItem(i, strAlias);
-
-			CString strAddress;
-			strAddress.Format(_T("%05d"), startAddr + i);
-			m_listResult.SetItemText(nItem, 1, strAddress);
-
-			CString strValue;
-			strValue.Format(_T("0x%04X"), response[i]);
-			m_listResult.SetItemText(nItem, 2, strValue);
-		}
-	}
-
-	
 
 	modbus_close(ctx);
 	modbus_free(ctx);
+	
+	if (rc <= 0)
+	{
+		// 기존 리스트 내용 지우기
+		m_listResult.DeleteAllItems();
+		return;
+
+
+		//// rc 값 만큼 응답 데이터를 리스트에 추가 (2바이트 단위)
+		//for (int i = 0; i < rc; i++)
+		//{
+		//	CString strAlias;
+		//	strAlias.Format(_T("%d"), i);
+		//	int nItem = m_listResult.InsertItem(i, strAlias);
+
+		//	CString strAddress;
+		//	strAddress.Format(_T("%05d"), startAddr + i);
+		//	m_listResult.SetItemText(nItem, 1, strAddress);
+
+		//	CString strValue;
+		//	strValue.Format(_T("0x%04X"), response[i]);
+		//	m_listResult.SetItemText(nItem, 2, strValue);
+		//}
+	}
+
+	quantity = rc;
+
+	// 리스트 컨트롤 초기화
+	m_listResult.DeleteAllItems();
+
+	// 기존 열 삭제
+	int colCount = m_listResult.GetHeaderCtrl()->GetItemCount();
+
+	for (int i = colCount - 1; i >= 0; i--)
+	{
+		m_listResult.DeleteColumn(i);
+	}
+
+	int sets = (quantity + 9) / 10;
+
+	for (int s = 0; s < sets; s++)
+	{
+		CString colAlias;
+		colAlias.Format(_T("Alias[%d~%d"), s * 10, s * 10 + 9);
+
+		CString colAddr;
+		colAddr.Format(_T("Address[%d~%d"), s * 10, s * 10 + 9);
+
+		CString colVal;
+		colVal.Format(_T("Value[%d~%d"), s * 10, s * 10 + 9);
+
+		int baseCol = s * 3;
+		m_listResult.InsertColumn(baseCol, colAlias, LVCFMT_LEFT, 80);
+		m_listResult.InsertColumn(baseCol+1, colAddr, LVCFMT_LEFT, 80);
+		m_listResult.InsertColumn(baseCol+2, colVal, LVCFMT_LEFT, 80);
+	}
+
+	int rows = (quantity < 10) ? quantity : 10;
+
+	for (int i = 0; i < rows; i++)
+	{
+		int nItem = m_listResult.InsertItem(i, _T(""));
+
+		for (int s = 0; s < sets; s++)
+		{
+			int regIndex = s * 10 + i;
+			if (regIndex >= quantity)
+			{
+				continue;
+			}
+
+			// Alias
+			CString strAlias;
+			strAlias.Format(_T("%d"), regIndex);
+			int colAlias = s * 3;
+			m_listResult.SetItemText(nItem, colAlias, strAlias);
+
+			// Address
+			CString strAddr;
+			strAddr.Format(_T("%05d"), startAddr + regIndex);
+			int colAddr = s * 3 + 1;
+			m_listResult.SetItemText(nItem, colAddr, strAddr);
+
+			// Value
+			CString strVal;
+			strVal.Format(_T("0x%04X"), response[regIndex]);
+			int colVal = s * 3 + 2;
+			m_listResult.SetItemText(nItem, colVal, strVal);
+		}
+	}
 }
 
 void CTCPDlg::UpdateTxInfo()
@@ -183,3 +273,6 @@ void CTCPDlg::UpdateTxInfo()
 	strInfo.Format(_T("TX = %d / ID = %d / FC = %d"), m_nTxCount, unitId, funcCode);
 	SetDlgItemText(IDC_STATIC_TXINFO, strInfo);
 }
+
+
+

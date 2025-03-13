@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CModMfcAppDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_TCP_BTN, &CModMfcAppDlg::OnBnClickedTcpBtn)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -102,6 +103,9 @@ BOOL CModMfcAppDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	m_fontTitle.CreateFontW(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, _T("Arial"));
+	
+	GetDlgItem(IDC_STATIC_TITLE)->SetFont(&m_fontTitle);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -166,3 +170,24 @@ void CModMfcAppDlg::OnBnClickedTcpBtn()
 	tcpDlg.DoModal();
 	
 }
+
+HBRUSH CModMfcAppDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// "Modbus Test"의 ID를 IDC_STATIC_TITLE로 가정
+	if (pWnd->GetDlgCtrlID() == IDC_STATIC_TITLE && nCtlColor == CTLCOLOR_STATIC)
+	{
+		// 텍스트 색상 설정 (예: 파란색)
+		pDC->SetTextColor(RGB(0, 0, 255));
+
+		// 배경 투명
+		pDC->SetBkMode(TRANSPARENT);
+
+		// 배경을 투명하게 하려면 NULL_BRUSH 반환
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
+	}
+
+	return hbr;
+}
+
