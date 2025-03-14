@@ -8,6 +8,7 @@
 #include "ModMfcAppDlg.h"
 #include "afxdialogex.h"
 #include "CTCPDlg.h"
+#include "CRTUDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -67,6 +68,7 @@ BEGIN_MESSAGE_MAP(CModMfcAppDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_TCP_BTN, &CModMfcAppDlg::OnBnClickedTcpBtn)
+	ON_BN_CLICKED(IDC_RTU_BTN, &CModMfcAppDlg::OnBnClickedRtuBtn)
 	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
@@ -189,5 +191,15 @@ HBRUSH CModMfcAppDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
     }
 
     return hbr;
+}
+
+void CModMfcAppDlg::OnBnClickedRtuBtn()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	// 모달 대화상자 방식
+	CRTUDlg rtuDlg;
+	rtuDlg.DoModal();
+
 }
 
